@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
+import { SessionProvider } from "@/components/providers/session-provider"
 import "@/styles/globals.css"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
@@ -47,9 +48,11 @@ export default function RootLayout({
         className={`${geist.variable} ${geistMono.variable} ${jetbrainsMono.variable} font-sans antialiased h-full overflow-hidden`}
         suppressHydrationWarning
       >
-        {children}
-        <Toaster position="top-right" />
-        <Analytics />
+        <SessionProvider>
+          {children}
+          <Toaster position="top-right" />
+          <Analytics />
+        </SessionProvider>
       </body>
     </html>
   )

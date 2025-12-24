@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Terminal, Github, Chrome } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { t, useLanguage } from "@/lib/i18n"
 
 export function LoginPage() {
@@ -31,6 +32,14 @@ export function LoginPage() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleMagicLink()
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" })
+    } catch (error) {
+      console.error("Erro ao fazer login com Google:", error)
     }
   }
 
@@ -59,6 +68,7 @@ export function LoginPage() {
           <Button
             size="lg"
             variant="outline"
+            onClick={handleGoogleLogin}
             className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 h-14 text-base hover:border-zinc-700 transition-all"
           >
             <Chrome className="w-5 h-5 mr-3" />
