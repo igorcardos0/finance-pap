@@ -16,10 +16,14 @@ export interface CustomCategory {
 // Default categories that cannot be deleted
 export const DEFAULT_CATEGORIES: CustomCategory[] = [
   { id: "income", name: "Receita", color: "var(--theme-primary)", type: "income", icon: "💰" },
-  { id: "saas", name: "SaaS", color: "#a855f7", type: "expense", icon: "☁️" },
   { id: "food", name: "Alimentação", color: "#f59e0b", type: "expense", icon: "🍔" },
   { id: "housing", name: "Moradia", color: "#3b82f6", type: "expense", icon: "🏠" },
   { id: "fixed", name: "Conta Fixa", color: "#ef4444", type: "expense", icon: "📋" },
+  { id: "education", name: "Educação", color: "#8b5cf6", type: "expense", icon: "📚" },
+  { id: "health", name: "Saúde", color: "#f43f5e", type: "expense", icon: "🏥" },
+  { id: "transport", name: "Transporte", color: "#06b6d4", type: "expense", icon: "🚗" },
+  { id: "leisure", name: "Lazer", color: "#ec4899", type: "expense", icon: "🎮" },
+  { id: "utilities", name: "Utilidades", color: "#10b981", type: "expense", icon: "💡" },
 ]
 
 const STORAGE_KEY = "devfinance_custom_categories"
@@ -42,10 +46,24 @@ export function useCategories() {
     if (!category) {
       const oldNameMap: Record<string, string> = {
         "Income": "income",
+        "Receita": "income",
         "Food": "food",
+        "Alimentação": "food",
         "Housing": "housing",
+        "Moradia": "housing",
         "Fixed": "fixed",
-        "SaaS": "saas",
+        "Conta Fixa": "fixed",
+        "SaaS": "food", // Migrar SaaS antigo para Alimentação como fallback
+        "Education": "education",
+        "Educação": "education",
+        "Health": "health",
+        "Saúde": "health",
+        "Transport": "transport",
+        "Transporte": "transport",
+        "Leisure": "leisure",
+        "Lazer": "leisure",
+        "Utilities": "utilities",
+        "Utilidades": "utilities",
       }
       const categoryId = oldNameMap[idOrName]
       if (categoryId) {

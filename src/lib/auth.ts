@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
+import Credentials from "next-auth/providers/credentials"
 
 // Validação das variáveis de ambiente
 const googleClientId = process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID
@@ -35,16 +36,42 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: googleClientId || "missing-client-id",
       clientSecret: googleClientSecret || "missing-client-secret",
     }),
+    Credentials({
+      id: "devpap",
+      name: "Development Login",
+      credentials: {
+        email: { label: "Email", type: "text" },
+      },
+      async authorize(credentials) {
+        // Login de desenvolvimento: quando email for "devpap"
+        if (credentials?.email === "devpap") {
+          return {
+            id: "dev-user-id",
+            email: "devpap@dev.local",
+            name: "Dev User",
+            image: null,
+          }
+        }
+        return null
+      },
+    }),
   ],
   pages: {
     signIn: "/",
   },
   callbacks: {
-    async signIn() {
-      // Validação adicional no callback
-      if (!googleClientId || !googleClientSecret) {
-        console.error("Google OAuth não configurado - verifique as variáveis de ambiente")
-        return false
+    async signIn({ user, account }) {
+      // Permitir login de desenvolvimento sempre
+      if (account?.provider === "devpap") {
+        return true
+      }
+      
+      // Validação adicional no callback para Google
+      if (account?.provider === "google") {
+        if (!googleClientId || !googleClientSecret) {
+          console.error("Google OAuth não configurado - verifique as variáveis de ambiente")
+          return false
+        }
       }
       return true
     },
@@ -53,6 +80,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.sub
       }
       return session
+    },
+    async jwt({ token, user, account }) {
+      if (account?.provider === "devpap" && user) {
+        token.sub = user.id
+        token.email = user.email
+        token.name = user.name
+      }
+      return token
     },
   },
   secret: authSecret || "missing-secret",

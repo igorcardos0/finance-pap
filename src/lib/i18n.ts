@@ -112,10 +112,14 @@ export const translations: Translations = {
 
   // Categories
   "category.income": { pt: "Receita", en: "Income", es: "Ingresos" },
-  "category.saas": { pt: "SaaS", en: "SaaS", es: "SaaS" },
   "category.food": { pt: "Alimentação", en: "Food", es: "Comida" },
   "category.housing": { pt: "Moradia", en: "Housing", es: "Vivienda" },
   "category.fixed": { pt: "Conta Fixa", en: "Fixed", es: "Fija" },
+  "category.education": { pt: "Educação", en: "Education", es: "Educación" },
+  "category.health": { pt: "Saúde", en: "Health", es: "Salud" },
+  "category.transport": { pt: "Transporte", en: "Transport", es: "Transporte" },
+  "category.leisure": { pt: "Lazer", en: "Leisure", es: "Ocio" },
+  "category.utilities": { pt: "Utilidades", en: "Utilities", es: "Servicios" },
   "category.debt": { pt: "Dívida", en: "Debt", es: "Deuda" },
 }
 

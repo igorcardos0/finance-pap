@@ -21,11 +21,32 @@ export function LoginPage() {
     setLang(savedLang as "pt" | "en" | "es")
   }, [])
 
-  const handleMagicLink = () => {
-    if (email.toLowerCase() === "devpap") {
-      router.push("/dashboard")
-    } else {
+  const handleMagicLink = async () => {
+    // Login de desenvolvimento: quando digitar "devpap"
+    if (email.toLowerCase().trim() === "devpap") {
+      try {
+        const result = await signIn("devpap", {
+          email: "devpap",
+          redirect: true,
+          callbackUrl: "/dashboard",
+        })
+        
+        if (result?.error) {
+          alert(`Erro ao fazer login: ${result.error}`)
+        }
+      } catch (error) {
+        console.error("Erro ao fazer login de desenvolvimento:", error)
+        alert("Erro ao fazer login de desenvolvimento.")
+      }
+      return
+    }
+    
+    // Magic link functionality - será implementado com backend real
+    // Por enquanto, apenas mostra mensagem
+    if (email && email.includes("@")) {
       alert("Magic link sent! Check your email.")
+    } else {
+      alert("Please enter a valid email address or 'devpap' for development login.")
     }
   }
 
@@ -33,6 +54,11 @@ export function LoginPage() {
     if (e.key === "Enter") {
       handleMagicLink()
     }
+  }
+
+  const handleGithubLogin = async () => {
+    // Placeholder para login com GitHub (pode ser implementado depois)
+    alert("Login com GitHub em breve!")
   }
 
   const handleGoogleLogin = async () => {
@@ -68,7 +94,8 @@ export function LoginPage() {
         <div className="space-y-4">
           <Button
             size="lg"
-            className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 h-14 text-base glow-effect hover:border-emerald-500/50 transition-all"
+            onClick={handleGithubLogin}
+            className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 h-14 text-base glow-effect hover:border-emerald-500/50 transition-all cursor-pointer"
           >
             <Github className="w-5 h-5 mr-3" />
             {t("login.github", lang)}
@@ -78,7 +105,7 @@ export function LoginPage() {
             size="lg"
             variant="outline"
             onClick={handleGoogleLogin}
-            className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 h-14 text-base hover:border-zinc-700 transition-all"
+            className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 h-14 text-base hover:border-zinc-700 transition-all cursor-pointer"
           >
             <Chrome className="w-5 h-5 mr-3" />
             {t("login.google", lang)}
@@ -101,11 +128,11 @@ export function LoginPage() {
                 <span className="text-emerald-500 font-mono text-sm">user@email:~$</span>
               </div>
               <Input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder={t("login.email", lang)}
+                placeholder={t("login.email", lang) + " (ou 'devpap' para desenvolvimento)"}
                 className="bg-transparent border-0 text-emerald-400 font-mono focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-6"
               />
               <div className="flex items-center mt-2">
@@ -116,7 +143,7 @@ export function LoginPage() {
             <Button
               size="lg"
               onClick={handleMagicLink}
-              className="w-full hover:opacity-90 text-zinc-950 font-semibold h-12 glow-effect"
+              className="w-full hover:opacity-90 text-zinc-950 font-semibold h-12 glow-effect cursor-pointer"
               style={{ backgroundColor: 'var(--theme-primary)' }}
             >
               {t("login.magic", lang)}
