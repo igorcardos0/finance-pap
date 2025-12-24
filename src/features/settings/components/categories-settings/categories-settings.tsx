@@ -35,6 +35,7 @@ import { Plus, Edit, Trash2, Tag, HelpCircle } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useCategories, type CustomCategory, DEFAULT_CATEGORIES } from "@/hooks/use-categories"
 import { toast } from "@/lib/toast"
+import { useLanguage, translateCategoryName } from "@/lib/i18n"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -77,6 +78,7 @@ export function CategoriesSettings() {
     updateCategory,
     deleteCategory,
   } = useCategories()
+  const lang = useLanguage()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null)
   const [deletingCategory, setDeletingCategory] = useState<CustomCategory | null>(null)
@@ -191,28 +193,30 @@ export function CategoriesSettings() {
             <div>
               <h3 className="text-sm font-semibold text-zinc-400 mb-3">Categorias Padrão</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {DEFAULT_CATEGORIES.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg border border-zinc-800"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{
-                          backgroundColor:
-                            category.color === "var(--theme-primary)"
-                              ? "var(--theme-primary)"
-                              : category.color,
-                        }}
-                      />
-                      <div>
-                        <p className="text-zinc-100 font-medium">{category.name}</p>
-                        <p className="text-xs text-zinc-500">
-                          {category.type === "income" ? "Receita" : "Despesa"}
-                        </p>
+                {DEFAULT_CATEGORIES.map((category) => {
+                  const translatedName = translateCategoryName(category.id, lang)
+                  return (
+                    <div
+                      key={category.id}
+                      className="flex items-center justify-between p-3 bg-zinc-950 rounded-lg border border-zinc-800"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{
+                            backgroundColor:
+                              category.color === "var(--theme-primary)"
+                                ? "var(--theme-primary)"
+                                : category.color,
+                          }}
+                        />
+                        <div>
+                          <p className="text-zinc-100 font-medium">{translatedName}</p>
+                          <p className="text-xs text-zinc-500">
+                            {category.type === "income" ? "Receita" : "Despesa"}
+                          </p>
+                        </div>
                       </div>
-                    </div>
                     <Badge
                       className={
                         category.type === "income"
@@ -222,8 +226,9 @@ export function CategoriesSettings() {
                     >
                       {category.type === "income" ? "Receita" : "Despesa"}
                     </Badge>
-                  </div>
-                ))}
+                    </div>
+                  )
+                })}
               </div>
             </div>
 

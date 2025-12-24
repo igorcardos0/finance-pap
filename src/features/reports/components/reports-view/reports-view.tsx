@@ -40,7 +40,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useFinanceData } from "@/hooks/use-finance-data"
 import { useCategories } from "@/hooks/use-categories"
 import { useBudgets } from "@/hooks/use-budgets"
-import { t, useLanguage } from "@/lib/i18n"
+import { t, useLanguage, translateCategoryName } from "@/lib/i18n"
 import { formatCurrency, formatPercentage, formatDate } from "@/lib/formatters"
 import { exportReportToPDF } from "@/lib/pdf-export"
 
@@ -98,7 +98,7 @@ export function ReportsView() {
     const categoryMap = new Map<string, number>()
 
     filteredTransactions
-      .filter((t) => t.amount < 0 && t.category !== "Income")
+      .filter((t) => t.amount < 0 && t.category !== "Income" && t.category !== "Receita")
       .forEach((t) => {
         const current = categoryMap.get(t.category) || 0
         categoryMap.set(t.category, current + Math.abs(t.amount))
@@ -107,8 +107,12 @@ export function ReportsView() {
     return Array.from(categoryMap.entries())
       .map(([category, amount]) => {
         const categoryInfo = getCategory(category)
+        const displayName = categoryInfo 
+          ? translateCategoryName(categoryInfo.id, lang)
+          : category
         return {
-          name: category,
+          name: category, // Keep original name for internal use
+          displayName, // Translated name for display
           amount,
           percentage: 0, // Will calculate after
           color: categoryInfo?.color || "var(--theme-primary)",
@@ -123,7 +127,7 @@ export function ReportsView() {
           percentage: total > 0 ? (item.amount / total) * 100 : 0,
         }
       })
-  }, [filteredTransactions, getCategory])
+  }, [filteredTransactions, getCategory, lang])
 
   // Income vs Expenses trend (monthly)
   const monthlyTrend = useMemo(() => {
@@ -134,7 +138,7 @@ export function ReportsView() {
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
       const monthData = monthMap.get(monthKey) || { income: 0, expenses: 0 }
 
-      if (t.amount > 0 || t.category === "Income") {
+      if (t.amount > 0 || t.category === "Income" || t.category === "Receita") {
         monthData.income += Math.abs(t.amount)
       } else {
         monthData.expenses += Math.abs(t.amount)
@@ -156,7 +160,7 @@ export function ReportsView() {
   // Top expenses
   const topExpenses = useMemo(() => {
     return filteredTransactions
-      .filter((t) => t.amount < 0 && t.category !== "Income")
+      .filter((t) => t.amount < 0 && t.category !== "Income" && t.category !== "Receita")
       .map((t) => ({
         ...t,
         amount: Math.abs(t.amount),
@@ -183,11 +187,11 @@ export function ReportsView() {
   // Total calculations
   const totals = useMemo(() => {
     const income = filteredTransactions
-      .filter((t) => t.amount > 0 || t.category === "Income")
+      .filter((t) => t.amount > 0 || t.category === "Income" || t.category === "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     const expenses = filteredTransactions
-      .filter((t) => t.amount < 0 && t.category !== "Income")
+      .filter((t) => t.amount < 0 && t.category !== "Income" && t.category !== "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     return {
@@ -242,22 +246,22 @@ export function ReportsView() {
 
     // Calculate current period totals
     const currentIncome = currentTransactions
-      .filter((t) => t.amount > 0 || t.category === "Income")
+      .filter((t) => t.amount > 0 || t.category === "Income" || t.category === "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     const currentExpenses = currentTransactions
-      .filter((t) => t.amount < 0 && t.category !== "Income")
+      .filter((t) => t.amount < 0 && t.category !== "Income" && t.category !== "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     const currentBalance = currentIncome - currentExpenses
 
     // Calculate previous period totals
     const previousIncome = previousTransactions
-      .filter((t) => t.amount > 0 || t.category === "Income")
+      .filter((t) => t.amount > 0 || t.category === "Income" || t.category === "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     const previousExpenses = previousTransactions
-      .filter((t) => t.amount < 0 && t.category !== "Income")
+      .filter((t) => t.amount < 0 && t.category !== "Income" && t.category !== "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     const previousBalance = previousIncome - previousExpenses
@@ -313,7 +317,7 @@ export function ReportsView() {
       period: period === "month" ? "Mensal" : period === "quarter" ? "Trimestral" : period === "year" ? "Anual" : "Todos",
       totals,
       expensesByCategory: expensesByCategory.map((cat) => ({
-        name: cat.name,
+        name: cat.displayName || cat.name,
         amount: cat.amount,
         percentage: cat.percentage,
       })),
@@ -339,7 +343,7 @@ Saldo: ${formatCurrency(totals.balance)}
 Total de Transações: ${totals.transactionCount}
 
 DESPESAS POR CATEGORIA:
-${expensesByCategory.map((cat) => `- ${cat.name}: ${formatCurrency(cat.amount)} (${formatPercentage(cat.percentage)})`).join("\n")}
+${expensesByCategory.map((cat) => `- ${cat.displayName || cat.name}: ${formatCurrency(cat.amount)} (${formatPercentage(cat.percentage)})`).join("\n")}
 
 TOP 10 DESPESAS:
 ${topExpenses.map((t, i) => `${i + 1}. ${t.description}: ${formatCurrency(t.amount)} (${formatDate(t.date)})`).join("\n")}
@@ -740,7 +744,7 @@ ${topExpenses.map((t, i) => `${i + 1}. ${t.description}: ${formatCurrency(t.amou
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${formatPercentage(percentage)}`}
+                    label={({ displayName, name, percentage }) => `${displayName || name}: ${formatPercentage(percentage)}`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="amount"
@@ -800,7 +804,7 @@ ${topExpenses.map((t, i) => `${i + 1}. ${t.description}: ${formatCurrency(t.amou
                 <BarChart data={expensesByCategory}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                   <XAxis
-                    dataKey="name"
+                    dataKey="displayName"
                     stroke="#71717a"
                     style={{ fontSize: "12px", fontFamily: "monospace" }}
                     angle={-45}

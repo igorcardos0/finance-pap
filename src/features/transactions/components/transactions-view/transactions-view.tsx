@@ -40,7 +40,7 @@ import { Search, Filter, Plus, Edit, Trash2, HelpCircle, X, ChevronLeft, Chevron
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Label } from "@/components/ui/label"
-import { t, useLanguage } from "@/lib/i18n"
+import { t, useLanguage, translateCategoryName } from "@/lib/i18n"
 import { useFinanceData, type Transaction } from "@/hooks/use-finance-data"
 import { useCategories } from "@/hooks/use-categories"
 import { AddTransactionDialog } from "@/features/transactions/components/add-transaction-dialog"
@@ -313,11 +313,17 @@ export function TransactionsView() {
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-zinc-800">
                           <SelectItem value="all">Todas as categorias</SelectItem>
-                          {availableCategories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {t(`category.${category.toLowerCase()}`, lang) || category}
-                            </SelectItem>
-                          ))}
+                          {availableCategories.map((categoryName) => {
+                            const category = getCategory(categoryName)
+                            const displayName = category 
+                              ? translateCategoryName(category.id, lang)
+                              : categoryName
+                            return (
+                              <SelectItem key={categoryName} value={categoryName}>
+                                {displayName}
+                              </SelectItem>
+                            )
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -422,7 +428,12 @@ export function TransactionsView() {
                       {(() => {
                         const category = getCategory(transaction.category)
                         const categoryColor = category?.color || "var(--theme-primary)"
-                        const isIncome = category?.type === "income" || transaction.category === "Income"
+                        const isIncome = category?.type === "income" || transaction.category === "Income" || transaction.category === "Receita"
+                        
+                        // Get translated category name
+                        const displayName = category 
+                          ? translateCategoryName(category.id, lang)
+                          : transaction.category
                         
                         return (
                           <Badge
@@ -448,7 +459,7 @@ export function TransactionsView() {
                             } : undefined}
                           >
                             {category?.icon && <span className="mr-1">{category.icon}</span>}
-                            {category?.name || transaction.category}
+                            {displayName}
                           </Badge>
                         )
                       })()}

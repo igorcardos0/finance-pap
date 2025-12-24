@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/form"
 import { useFinanceData, type Transaction } from "@/hooks/use-finance-data"
 import { useCategories } from "@/hooks/use-categories"
-import { t, useLanguage } from "@/lib/i18n"
+import { t, useLanguage, translateCategoryName } from "@/lib/i18n"
 import { transactionSchema, type TransactionFormData } from "@/lib/validations"
 import { formatCurrency } from "@/lib/formatters"
 import { toast } from "@/lib/toast"
@@ -94,9 +94,14 @@ export function AddTransactionDialog({ open, onOpenChange, transaction }: AddTra
           .filter((tag) => tag.length > 0)
       : []
 
-    // Get category to determine type
-    const category = allCategories.find((cat) => cat.name === data.category)
-    const isIncome = category?.type === "income" || data.category === "Income"
+    // Get category to determine type (also check for old English names for compatibility)
+    const category = allCategories.find((cat) => 
+      cat.name === data.category || 
+      cat.id === data.category ||
+      (data.category === "Income" && cat.id === "income") ||
+      (data.category === "Receita" && cat.id === "income")
+    )
+    const isIncome = category?.type === "income" || data.category === "Income" || data.category === "Receita"
     
     // Ensure Income is positive, everything else is negative
     let finalAmount = parseFloat(data.amount)
@@ -263,14 +268,17 @@ export function AddTransactionDialog({ open, onOpenChange, transaction }: AddTra
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-zinc-900 border-zinc-800">
-                      {allCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
-                          <div className="flex items-center gap-2">
-                            {category.icon && <span>{category.icon}</span>}
-                            <span>{category.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {allCategories.map((category) => {
+                        const translatedName = translateCategoryName(category.id, lang)
+                        return (
+                          <SelectItem key={category.id} value={category.name}>
+                            <div className="flex items-center gap-2">
+                              {category.icon && <span>{category.icon}</span>}
+                              <span>{translatedName}</span>
+                            </div>
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -302,7 +310,7 @@ export function AddTransactionDialog({ open, onOpenChange, transaction }: AddTra
                     />
                   </FormControl>
                   <p className="text-xs text-zinc-500">
-                    {selectedCategory?.type === "income" || selectedCategoryName === "Income"
+                    {selectedCategory?.type === "income" || selectedCategoryName === "Income" || selectedCategoryName === "Receita"
                       ? "✓ Valor será salvo como positivo (receita)"
                       : selectedCategoryName
                         ? "✓ Valor será salvo como negativo (despesa) automaticamente"

@@ -66,7 +66,7 @@ export function parseCSVImport(fileContent: string): { transactions: Transaction
     const date = row[headerMap["date"]]?.trim() || ""
     const description = row[headerMap["description"]]?.trim() || ""
     const amountStr = row[headerMap["amount"]]?.trim() || "0"
-    const category = row[headerMap["category"]]?.trim() || "Fixed"
+    const category = row[headerMap["category"]]?.trim() || "Conta Fixa"
     const tagsStr = row[headerMap["tags"]]?.trim() || ""
     const account = row[headerMap["account"]]?.trim() || "Checking"
 
@@ -88,8 +88,8 @@ export function parseCSVImport(fileContent: string): { transactions: Transaction
       ? tagsStr.split(/[;,\n]/).map((tag) => tag.trim()).filter((tag) => tag.length > 0)
       : []
 
-    // Ensure Income is positive, others are negative
-    if (category === "Income" || category.toLowerCase() === "income") {
+    // Ensure Income is positive, others are negative (check both old English and new Portuguese names)
+    if (category === "Income" || category === "Receita" || category.toLowerCase() === "income") {
       amount = Math.abs(amount)
     } else {
       amount = -Math.abs(amount)

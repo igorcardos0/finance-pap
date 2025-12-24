@@ -37,6 +37,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useBudgets, type Budget } from "@/hooks/use-budgets"
 import { useCategories } from "@/hooks/use-categories"
 import { toast } from "@/lib/toast"
+import { useLanguage, translateCategoryName } from "@/lib/i18n"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -67,13 +68,20 @@ type BudgetFormData = z.infer<typeof budgetSchema>
 
 export function BudgetsSettings() {
   const { budgets, addBudget, updateBudget, deleteBudget, getBudgetsNeedingAttention } = useBudgets()
-  const { allCategories, getCategoriesByType } = useCategories()
+  const { allCategories, getCategoriesByType, getCategory } = useCategories()
+  const lang = useLanguage()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null)
   const [deletingBudget, setDeletingBudget] = useState<Budget | null>(null)
 
   const expenseCategories = getCategoriesByType("expense")
   const budgetsNeedingAttention = getBudgetsNeedingAttention()
+
+  // Helper function to get translated category name
+  const getTranslatedCategoryName = (categoryName: string) => {
+    const category = getCategory(categoryName)
+    return category ? translateCategoryName(category.id, lang) : categoryName
+  }
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
@@ -197,7 +205,7 @@ export function BudgetsSettings() {
               <div className="space-y-2">
                 {budgetsNeedingAttention.map((budget) => (
                   <div key={budget.id} className="text-sm text-zinc-300">
-                    <span className="font-medium">{budget.categoryName}:</span>{" "}
+                    <span className="font-medium">{getTranslatedCategoryName(budget.categoryName)}:</span>{" "}
                     {budget.isOverBudget ? (
                       <span className="text-red-400">Ultrapassou o limite em {formatCurrency(budget.spending - budget.limit)}</span>
                     ) : (
@@ -235,7 +243,7 @@ export function BudgetsSettings() {
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-zinc-100 text-base flex items-center gap-2">
-                          {budget.categoryName}
+                          {getTranslatedCategoryName(budget.categoryName)}
                           {isOverBudget && (
                             <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-xs">
                               Excedido
@@ -363,14 +371,17 @@ export function BudgetsSettings() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-zinc-900 border-zinc-800">
-                        {expenseCategories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
-                            <div className="flex items-center gap-2">
-                              {category.icon && <span>{category.icon}</span>}
-                              <span>{category.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {expenseCategories.map((category) => {
+                          const translatedName = translateCategoryName(category.id, lang)
+                          return (
+                            <SelectItem key={category.id} value={category.name}>
+                              <div className="flex items-center gap-2">
+                                {category.icon && <span>{category.icon}</span>}
+                                <span>{translatedName}</span>
+                              </div>
+                            </SelectItem>
+                          )
+                        })}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -475,7 +486,7 @@ export function BudgetsSettings() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-zinc-100">Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
-              Tem certeza que deseja excluir o orçamento para "{deletingBudget?.categoryName}"?
+              Tem certeza que deseja excluir o orçamento para "{deletingBudget ? getTranslatedCategoryName(deletingBudget.categoryName) : ""}"?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -76,7 +76,7 @@ export function useFinanceData() {
           const loaded = JSON.parse(stored)
           // Migrate old transactions: ensure Income is positive, others are negative
           const migrated = loaded.map((t: Transaction) => {
-            if (t.category === "Income") {
+            if (t.category === "Income" || t.category === "Receita") {
               // Income should always be positive
               return { ...t, amount: Math.abs(t.amount) }
             } else {
@@ -299,12 +299,12 @@ export function useFinanceData() {
 
     // Revenue: only positive amounts OR Income category (even if somehow negative)
     const revenue = currentMonthTransactions
-      .filter((t) => t.amount > 0 || t.category === "Income")
+      .filter((t) => t.amount > 0 || t.category === "Income" || t.category === "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     // Expenses: only negative amounts AND not Income category
     const expenses = currentMonthTransactions
-      .filter((t) => t.amount < 0 && t.category !== "Income")
+      .filter((t) => t.amount < 0 && t.category !== "Income" && t.category !== "Receita")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     // Calculate total revenue and expenses for last 12 months
@@ -323,12 +323,12 @@ export function useFinanceData() {
 
       // Revenue: only positive amounts OR Income category
       const monthRevenue = monthTransactions
-        .filter((t) => t.amount > 0 || t.category === "Income")
+        .filter((t) => t.amount > 0 || t.category === "Income" || t.category === "Receita")
         .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
       // Expenses: only negative amounts AND not Income category
       const monthExpenses = monthTransactions
-        .filter((t) => t.amount < 0 && t.category !== "Income")
+        .filter((t) => t.amount < 0 && t.category !== "Income" && t.category !== "Receita")
         .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
       last12Months.push({
@@ -341,7 +341,7 @@ export function useFinanceData() {
     // Calculate net worth: sum of all transactions (positive = income, negative = expenses)
     // Ensure Income is always positive and expenses are always negative
     const netWorth = transactions.reduce((sum, t) => {
-      if (t.category === "Income") {
+      if (t.category === "Income" || t.category === "Receita") {
         return sum + Math.abs(t.amount) // Income always adds
       } else {
         return sum + (t.amount < 0 ? t.amount : -Math.abs(t.amount)) // Expenses always subtract

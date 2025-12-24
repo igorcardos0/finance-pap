@@ -15,11 +15,11 @@ export interface CustomCategory {
 
 // Default categories that cannot be deleted
 export const DEFAULT_CATEGORIES: CustomCategory[] = [
-  { id: "income", name: "Income", color: "var(--theme-primary)", type: "income", icon: "💰" },
+  { id: "income", name: "Receita", color: "var(--theme-primary)", type: "income", icon: "💰" },
   { id: "saas", name: "SaaS", color: "#a855f7", type: "expense", icon: "☁️" },
-  { id: "food", name: "Food", color: "#f59e0b", type: "expense", icon: "🍔" },
-  { id: "housing", name: "Housing", color: "#3b82f6", type: "expense", icon: "🏠" },
-  { id: "fixed", name: "Fixed", color: "#ef4444", type: "expense", icon: "📋" },
+  { id: "food", name: "Alimentação", color: "#f59e0b", type: "expense", icon: "🍔" },
+  { id: "housing", name: "Moradia", color: "#3b82f6", type: "expense", icon: "🏠" },
+  { id: "fixed", name: "Conta Fixa", color: "#ef4444", type: "expense", icon: "📋" },
 ]
 
 const STORAGE_KEY = "devfinance_custom_categories"
@@ -33,9 +33,27 @@ export function useCategories() {
   // Get all categories (default + custom)
   const allCategories = [...DEFAULT_CATEGORIES, ...customCategories]
 
-  // Get category by id or name
+  // Get category by id or name (with backward compatibility for old English names)
   const getCategory = (idOrName: string): CustomCategory | undefined => {
-    return allCategories.find((cat) => cat.id === idOrName || cat.name === idOrName)
+    // First try to find by ID or current name
+    let category = allCategories.find((cat) => cat.id === idOrName || cat.name === idOrName)
+    
+    // If not found, try to match old English names for backward compatibility
+    if (!category) {
+      const oldNameMap: Record<string, string> = {
+        "Income": "income",
+        "Food": "food",
+        "Housing": "housing",
+        "Fixed": "fixed",
+        "SaaS": "saas",
+      }
+      const categoryId = oldNameMap[idOrName]
+      if (categoryId) {
+        category = allCategories.find((cat) => cat.id === categoryId)
+      }
+    }
+    
+    return category
   }
 
   // Add custom category

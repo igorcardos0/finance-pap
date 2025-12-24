@@ -45,7 +45,7 @@ export function SummaryView() {
   const summary = useMemo(() => {
     // Entradas (Income) - positive transactions OR Income category
     const entradas = transactions
-      .filter((t) => t.amount > 0 || t.category === "Income")
+      .filter((t) => t.amount > 0 || t.category === "Income" || t.category === "Receita")
       .map((t) => ({
         id: t.id,
         description: t.description,
@@ -59,18 +59,21 @@ export function SummaryView() {
     // Contas Fixas (Fixed Costs) - recurring expenses (negative amounts, not Income, not Debt)
     const contasFixas = transactions
       .filter((t) => {
-        const isExpense = t.amount < 0 || (t.amount > 0 && t.category !== "Income")
+        const isExpense = t.amount < 0 || (t.amount > 0 && t.category !== "Income" && t.category !== "Receita")
         const isFixedCategory =
           t.category === "Fixed" ||
+          t.category === "Conta Fixa" ||
           t.category === "Housing" ||
+          t.category === "Moradia" ||
           t.category === "Food" ||
+          t.category === "Alimentação" ||
           t.description.toLowerCase().includes("aluguel") ||
           t.description.toLowerCase().includes("luz") ||
           t.description.toLowerCase().includes("internet") ||
           t.description.toLowerCase().includes("transporte") ||
           t.description.toLowerCase().includes("trybe") ||
           t.tags.some((tag) => tag.toLowerCase().includes("fixa") || tag.toLowerCase().includes("fixed"))
-        return isExpense && isFixedCategory && t.category !== "Debt" && t.category !== "Income"
+        return isExpense && isFixedCategory && t.category !== "Debt" && t.category !== "Dívida" && t.category !== "Income" && t.category !== "Receita"
       })
       .map((t) => ({
         id: t.id,

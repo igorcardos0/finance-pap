@@ -134,3 +134,20 @@ export function setLanguage(lang: Language) {
     window.dispatchEvent(new Event("languageChange"))
   }
 }
+
+/**
+ * Translate category name based on category ID
+ * Returns translated name for default categories, or original name for custom categories
+ */
+export function translateCategoryName(categoryIdOrName: string, lang: Language): string {
+  const translationKey = `category.${categoryIdOrName.toLowerCase()}`
+  const translated = translations[translationKey]?.[lang]
+  
+  // If translation exists, return it
+  if (translated) {
+    return translated
+  }
+  
+  // Otherwise return the original name (for custom categories or unknown categories)
+  return categoryIdOrName
+}
