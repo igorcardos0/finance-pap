@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Languages, Palette, Bell, Shield, Key, Download, Upload, Globe, Check, HelpCircle } from "lucide-react"
+import { Languages, Palette, Bell, Shield, Key, Download, Upload, Globe, Check, HelpCircle, User, LogOut } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { t, useLanguage, setLanguage } from "@/lib/i18n"
 import { useFinanceData } from "@/hooks/use-finance-data"
@@ -35,6 +35,9 @@ import { CategoriesSettings } from "@/features/settings/components/categories-se
 import { BudgetsSettings } from "@/features/settings/components/budgets-settings"
 import { parseJSONImport, parseCSVImport, validateImportData } from "@/lib/import-utils"
 import { useAutoBackup, type BackupFrequency } from "@/hooks/use-auto-backup"
+import { useUserProfile } from "@/hooks/use-user-profile"
+import { signOut } from "next-auth/react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type Theme = "matrix-green" | "cyber-violet" | "neon-blue"
 
@@ -56,6 +59,7 @@ export function SettingsView() {
     lastBackup,
     performBackup,
   } = useAutoBackup()
+  const { profile, isLoading: profileLoading, isAuthenticated } = useUserProfile()
 
   useEffect(() => {
     setLang(savedLang as "pt" | "en" | "es")
@@ -240,8 +244,97 @@ export function SettingsView() {
     }
   }
 
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: "/" })
+  }
+
   return (
     <div className="space-y-6">
+      {/* User Profile */}
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <User className="w-5 h-5 text-theme-primary" />
+            <div>
+              <CardTitle className="text-zinc-100 flex items-center gap-2">
+                Perfil do Usuário
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-400 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-zinc-800 border-zinc-700 text-zinc-100 max-w-xs">
+                    <p className="font-mono text-xs">
+                      Informações do seu <strong>perfil</strong> obtidas do Google. 
+                      Essas informações são salvas automaticamente quando você faz login.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </CardTitle>
+              <CardDescription className="text-zinc-500 font-mono text-sm">
+                Dados sincronizados do Google
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {profileLoading ? (
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-zinc-800 animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse" />
+                <div className="h-3 w-48 bg-zinc-800 rounded animate-pulse" />
+              </div>
+            </div>
+          ) : profile && isAuthenticated ? (
+            <div className="flex items-center gap-4">
+              <Avatar className="w-16 h-16 border-2 border-zinc-800">
+                <AvatarImage src={profile.image || undefined} alt={profile.name || "User"} />
+                <AvatarFallback className="bg-zinc-800 font-mono text-lg" style={{ color: 'var(--theme-primary)' }}>
+                  {profile.name
+                    ? profile.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)
+                    : "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-lg font-semibold text-zinc-100 truncate">
+                  {profile.name || "Usuário"}
+                </p>
+                <p className="text-sm font-mono text-zinc-400 truncate">
+                  {profile.email || "Sem email"}
+                </p>
+                <p className="text-xs font-mono text-zinc-500 mt-1">
+                  ID: {profile.id || "N/A"}
+                </p>
+              </div>
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                className="border-zinc-800 bg-transparent hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-zinc-400 font-mono text-sm mb-4">Não autenticado</p>
+              <Button
+                onClick={() => window.location.href = "/"}
+                className="text-white font-semibold"
+                style={{ backgroundColor: 'var(--theme-primary)' }}
+              >
+                Fazer Login
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Language Settings */}
       <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader>

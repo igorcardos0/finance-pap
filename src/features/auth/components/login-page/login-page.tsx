@@ -37,9 +37,18 @@ export function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      await signIn("google", { callbackUrl: "/dashboard" })
+      const result = await signIn("google", { 
+        callbackUrl: "/dashboard",
+        redirect: true,
+      })
+      
+      // Se houver erro, o signIn pode retornar um objeto com error
+      if (result?.error) {
+        alert(`Erro ao fazer login: ${result.error}`)
+      }
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error)
+      alert("Erro ao fazer login. Verifique se as variáveis de ambiente estão configuradas.")
     }
   }
 

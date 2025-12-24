@@ -9,7 +9,8 @@
     "start": "next start",
     "test:imports": "node scripts/test-imports.js",
     "test:imports:build": "node scripts/test-imports.js --build",
-    "test": "npm run test:imports"
+    "test": "npm run test:imports",
+    "check:env": "node scripts/check-env.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

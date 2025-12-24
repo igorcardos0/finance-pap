@@ -8,4 +8,5 @@ export * from './use-mobile'
 export * from './use-notifications'
 export * from './use-theme'
 export * from './use-toast'
+export * from './use-user-profile'
 

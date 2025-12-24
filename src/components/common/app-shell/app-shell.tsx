@@ -26,6 +26,8 @@ import { t, useLanguage } from "@/lib/i18n"
 import { AddTransactionDialog } from "@/features/transactions/components/add-transaction-dialog"
 import { CommandPalette } from "@/components/common/command-palette"
 import { NotificationsPanel } from "@/components/common/notifications-panel"
+import { useUserProfile } from "@/hooks/use-user-profile"
+import { signOut } from "next-auth/react"
 
 const TransactionDialogContext = createContext<{
   open: boolean
@@ -43,6 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const savedLang = useLanguage()
+  const { profile, isLoading, isAuthenticated } = useUserProfile()
 
   useEffect(() => {
     setLang(savedLang as "pt" | "en" | "es")
@@ -106,19 +109,50 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* User Profile */}
         <div className="p-4 border-t border-zinc-800">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10 border border-zinc-800">
-              <AvatarImage src="/placeholder.svg?height=40&width=40" />
-              <AvatarFallback className="bg-zinc-900 font-mono" style={{ color: 'var(--theme-primary)' }}>JD</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-zinc-100 truncate">John Dev</p>
-              <p className="text-xs font-mono flex items-center gap-1" style={{ color: 'var(--theme-primary)' }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--theme-primary)' }}></span>
-                {t("user.online", lang)}
-              </p>
+          {isLoading ? (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-zinc-900 animate-pulse" />
+              <div className="flex-1 min-w-0">
+                <div className="h-4 w-24 bg-zinc-900 rounded animate-pulse mb-2" />
+                <div className="h-3 w-16 bg-zinc-900 rounded animate-pulse" />
+              </div>
             </div>
-          </div>
+          ) : profile && isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <Avatar className="w-10 h-10 border border-zinc-800">
+                <AvatarImage src={profile.image || undefined} alt={profile.name || "User"} />
+                <AvatarFallback className="bg-zinc-900 font-mono" style={{ color: 'var(--theme-primary)' }}>
+                  {profile.name
+                    ? profile.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)
+                    : "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-zinc-100 truncate">
+                  {profile.name || "Usuário"}
+                </p>
+                <p className="text-xs font-mono flex items-center gap-1" style={{ color: 'var(--theme-primary)' }}>
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--theme-primary)' }}></span>
+                  {t("user.online", lang)}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Avatar className="w-10 h-10 border border-zinc-800">
+                <AvatarFallback className="bg-zinc-900 font-mono" style={{ color: 'var(--theme-primary)' }}>?</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-zinc-400 truncate">Não autenticado</p>
+                <p className="text-xs font-mono text-zinc-600">Offline</p>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
