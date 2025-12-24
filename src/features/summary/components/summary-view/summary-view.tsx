@@ -56,24 +56,17 @@ export function SummaryView() {
 
     const totalEntradas = entradas.reduce((sum, t) => sum + t.amount, 0)
 
-    // Contas Fixas (Fixed Costs) - recurring expenses (negative amounts, not Income, not Debt)
+    // Despesas (All Expenses) - todas as despesas exceto Income e Debt
     const contasFixas = transactions
       .filter((t) => {
-        const isExpense = t.amount < 0 || (t.amount > 0 && t.category !== "Income" && t.category !== "Receita")
-        const isFixedCategory =
-          t.category === "Fixed" ||
-          t.category === "Conta Fixa" ||
-          t.category === "Housing" ||
-          t.category === "Moradia" ||
-          t.category === "Food" ||
-          t.category === "Alimentação" ||
-          t.description.toLowerCase().includes("aluguel") ||
-          t.description.toLowerCase().includes("luz") ||
-          t.description.toLowerCase().includes("internet") ||
-          t.description.toLowerCase().includes("transporte") ||
-          t.description.toLowerCase().includes("trybe") ||
-          t.tags.some((tag) => tag.toLowerCase().includes("fixa") || tag.toLowerCase().includes("fixed"))
-        return isExpense && isFixedCategory && t.category !== "Debt" && t.category !== "Dívida" && t.category !== "Income" && t.category !== "Receita"
+        // Excluir receitas
+        if (t.category === "Income" || t.category === "Receita") return false
+        // Excluir dívidas
+        if (t.category === "Debt" || t.category === "Dívida") return false
+        // Incluir todas as transações com valor negativo (despesas)
+        if (t.amount < 0) return true
+        // Não incluir transações positivas que não são receita (caso haja alguma inconsistência)
+        return false
       })
       .map((t) => ({
         id: t.id,
@@ -182,16 +175,16 @@ export function SummaryView() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-rose-400 flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
-              Contas Fixas
+              Despesas
               <Tooltip>
                 <TooltipTrigger asChild>
                   <HelpCircle className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-400 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="bg-zinc-800 border-zinc-700 text-zinc-100 max-w-xs">
                   <p className="font-mono text-xs">
-                    <strong>Contas Fixas</strong> são despesas recorrentes que você precisa pagar todos os meses,
-                    como aluguel, internet, luz, água e outras contas regulares. Essas despesas são essenciais
-                    e devem ser priorizadas no seu planejamento financeiro.
+                    <strong>Despesas</strong> incluem todas as suas categorias de gastos: alimentação, moradia,
+                    transporte, saúde, educação, lazer, utilidades e outras. Este total representa todas as saídas
+                    de dinheiro do seu orçamento mensal.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -239,8 +232,8 @@ export function SummaryView() {
                     </TooltipTrigger>
                     <TooltipContent className="bg-zinc-800 border-zinc-700 text-zinc-100 max-w-xs">
                       <p className="font-mono text-xs">
-                        <strong>Resto</strong> é o dinheiro que sobra após pagar todas as contas fixas.
-                        É calculado como: Entradas - Contas Fixas. Este valor pode ser usado para investimentos,
+                        <strong>Resto</strong> é o dinheiro que sobra após pagar todas as despesas.
+                        É calculado como: Entradas - Despesas. Este valor pode ser usado para investimentos,
                         pagamento de dívidas ou reserva de emergência. Um valor negativo indica que você está gastando
                         mais do que ganha.
                       </p>
@@ -338,15 +331,16 @@ export function SummaryView() {
           <CardHeader>
             <CardTitle className="text-rose-400 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span>Contas Fixas</span>
+                <span>Despesas</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <HelpCircle className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-400 cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-800 border-zinc-700 text-zinc-100 max-w-xs">
                     <p className="font-mono text-xs">
-                      Lista de todas as suas despesas fixas e recorrentes. Essas são as contas que você precisa
-                      pagar mensalmente. Manter controle dessas despesas é essencial para um planejamento financeiro eficaz.
+                      Lista de todas as suas despesas. Inclui todas as categorias de gastos como alimentação,
+                      moradia, transporte, saúde, educação, lazer e outras. Manter controle dessas despesas é essencial
+                      para um planejamento financeiro eficaz.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -359,7 +353,7 @@ export function SummaryView() {
           <CardContent className="space-y-2 max-h-96 overflow-y-auto">
             {summary.contasFixas.length === 0 ? (
               <p className="text-zinc-500 text-sm font-mono text-center py-4">
-                Nenhuma conta fixa registrada
+                Nenhuma despesa registrada
               </p>
             ) : (
               summary.contasFixas.map((conta) => {
@@ -483,12 +477,12 @@ export function SummaryView() {
             </div>
             <span className="text-zinc-500">-</span>
             <div className="flex items-center gap-2">
-              <span className="text-rose-400">Contas Fixas</span>
+              <span className="text-rose-400">Despesas</span>
               <span className="text-zinc-500">{formatCurrency(summary.totalContasFixas)}</span>
             </div>
             <span className="text-zinc-500">-</span>
             <div className="flex items-center gap-2">
-              <span className="text-orange-400">Dívidas (não incluídas)</span>
+              <span className="text-orange-400">Dívidas</span>
               <span className="text-zinc-500">{formatCurrency(summary.totalDividas)}</span>
             </div>
             <span className="text-zinc-500">=</span>
